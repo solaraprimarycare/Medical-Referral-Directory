@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medical Referral Directory</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f4f8;
+    --card: #ffffff;
+    --accent: #1e2d5a;
+    --accent-light: #eef0f7;
+    --accent2: #c0392b;
+    --text: #1a1a1a;
+    --muted: #5a6070;
+    --border: #e0dce8;
+    --section-bg: #1e2d5a;
+    --pill-bg: #eef0f7;
+    --pill-text: #1e2d5a;
+    --fax-bg: #f5edf0;
+    --fax-text: #7d2d47;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1e2d5a 0%, #2a4a8a 25%, #e8521a 65%, #f0832a 100%);
+    color: white;
+    padding: 18px 24px;
+    border-bottom: 4px solid #162040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header-text p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 300;
+  }
+  
+  .print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--accent);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    white-space: nowrap;
+  }
+  .print-btn:hover { background: #f3f4f6; }
+  .print-btn:active { transform: scale(0.98); }
+
+  .controls {
+    max-width: 860px;
+    margin: 28px auto 0;
+    padding: 0 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .search-wrap {
+    flex: 1 1 260px;
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: white;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: #1e2d5a; }
+
+  .multiselect-container {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 200px;
+  }
+  .multiselect-select {
+    width: 100%;
+    padding: 11px 36px 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .multiselect-options {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    margin-top: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 6px 0;
+  }
+  .multiselect-options.show { display: block; }
+  .multiselect-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .multiselect-option:hover { background: var(--accent-light); }
+  .multiselect-option input {
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .main { max-width: 860px; margin: 24px auto 0; padding: 0 20px; }
+
+  .specialty-section { margin-bottom: 28px; }
+  .specialty-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #1e2d5a 0%, #2e4fa0 30%, #e8521a 100%);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px 10px 0 0;
+    cursor: pointer;
+    user-select: none;
+  }
+  .specialty-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    flex: 1;
+  }
+  .specialty-count {
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .chevron {
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+  .specialty-header.collapsed .chevron { transform: rotate(-90deg); }
+
+  .providers-list {
+    border: 1.5px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .specialty-section.collapsed .providers-list { display: none; }
+
+  .provider-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .provider-card:last-child { border-bottom: none; }
+  .provider-card:hover { background: var(--accent-light); }
+  .provider-card.hidden { display: none; }
+
+  .provider-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text);
+    grid-column: 1;
+  }
+  .provider-address {
+    font-size: 0.83rem;
+    color: var(--muted);
+    grid-column: 1;
+    line-height: 1.4;
+  }
+  
+  .provider-phone-container {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-self: center;
+  }
+  .phone-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .phone-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: right;
+    margin-bottom: -2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .phone-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .phone-link:hover { background: #1e2d5a; color: white; }
+
+  .fax-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--fax-bg);
+    color: var(--fax-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(125, 45, 71, 0.1);
+  }
+
+  .location-block {
+    margin-top: 10px;
+    border-top: 1px dashed var(--border);
+    padding-top: 8px;
+  }
+  .location-heading {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+
+  .no-results {
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    display: none;
+  }
+  .no-results.visible { display: block; }
+
+  @media (max-width: 560px) {
+    .header { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .header-left { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .print-btn { width: 100%; justify-content: center; }
+    .provider-card { grid-template-columns: 1fr; }
+    .provider-phone-container { grid-column: 1; grid-row: auto; align-self: flex-start; width: 100%; margin-top: 8px; }
+    .phone-label { text-align: left; margin-bottom: 2px; margin-top: 4px; }
+    .phone-link, .fax-badge { width: fit-content; }
+  }
+
+  @media print {
+    body { background: white; color: black; padding: 0; }
+    .header, .controls, .chevron, .specialty-count, .multiselect-container { display: none !important; }
+    .main { max-width: 100%; margin: 0; padding: 0; }
+    
+    .specialty-section { 
+      margin-bottom: 15px; 
+      page-break-inside: avoid; 
+      display: block !important; 
+    }
+    .specialty-section[style*="display: none"] {
+      display: none !important;
+    }
+    
+    .specialty-header { 
+      background: #f3f4f6 !important; 
+      color: black !important; 
+      padding: 6px 10px; 
+      border: 1px solid #9ca3af;
+      border-radius: 4px;
+    }
+    .specialty-header h2 { font-size: 1.1rem; font-weight: bold; }
+    
+    .providers-list { 
+      display: block !important; 
+      border: 1px solid #d1d5db; 
+      border-top: none; 
+      border-radius: 0 0 4px 4px; 
+    }
+    
+    .provider-card { 
+      padding: 10px 14px; 
+      border-bottom: 1px solid #e5e7eb; 
+      grid-template-columns: 1fr auto;
+      background: transparent !important;
+      page-break-inside: avoid;
+    }
+    .provider-card.hidden { display: none !important; }
+    
+    .provider-name { font-size: 0.9rem; }
+    .provider-address { font-size: 0.8rem; color: #374151; }
+    .location-block { margin-top: 6px; padding-top: 4px; }
+    .location-heading { font-size: 0.75rem; color: #111827; }
+    
+    .phone-link, .fax-badge { 
+      background: transparent !important; 
+      border: none !important; 
+      color: black !important; 
+      padding: 0 !important; 
+      font-size: 0.8rem !important;
+    }
+    .phone-link svg, .fax-badge svg { display: none; }
+    .phone-label { font-size: 0.65rem; color: #4b5563; }
+    
+    .phone-link::before { content: "P: "; font-weight: bold; }
+    .fax-badge::before { content: "F: "; font-weight: bold; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-text">
+      <h1>Medical Referral Directory</h1>
+      <p>Search or filter verified multi-specialty regional practices</p>
+    </div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨️ Print Directory</button>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Search provider name or address...">
+  </div>
+  
+  <div class="multiselect-container">
+    <div class="multiselect-select" id="multiselectTrigger">All Specialties Selected</div>
+    <div class="multiselect-options" id="multiselectMenu">
+      <div class="multiselect-option" style="border-bottom: 1px solid var(--border); font-weight: 600;" id="selectAllOption">
+        <input type="checkbox" id="chkSelectAll" checked>
+        <label for="chkSelectAll" style="cursor:pointer; width:100%;">Select All</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main" id="mainContent">
+  <div class="no-results" id="noResults">No providers match your search criteria.</div>
+</div>
+
+<script>
+const data = [
+  { specialty: "Cardiology", name: "Dr. Varinder M. Singh, MD (HMH)", address: "Central Jersey Cardiology, PC — 215 Bridge St, Bldg E, Metuchen, NJ 08840", phone: "(732)-452-0400", fax: "(732)-452-0407" },
+  { specialty: "Cardiology", name: "Monmouth Cardiology Associates", address: "Multiple Regional Locations, NJ", phone: "(732)-210-3285", fax: "(732)-210-3286", locations: [{heading: "Eatontown Office — 11 Meridian Rd, Eatontown, NJ 07724", providers: "Dr. Thomas J. Breen, MD; Dr. Steven J. Daniels, MD; Dr. Daniel H. Kiss, MD; Dr. Amanda Kramer, MD; Dr. Gregory Noto, MD; Dr. Leon F. O'Neill IV, DO; Dr. Matthew D. Saybolt, MD"},{heading: "Freehold Office — 222 Schanck Rd, Freehold, NJ 07728", providers: "Dr. Matt Bach, MD, FACC; Dr. Charles H. Koo, MD; Dr. Jason Litsky, DO; Dr. Marcia Liu, MD, FACC; Dr. Mark Mascarenhas, MD; Dr. Abdulrahman Museedi, MD; Dr. Jeffrey L. Osofsky, MD"},{heading: "Monroe Office — Clearbrook Commons, 298 Applegarth Rd, Suite G, Monroe, NJ 08831", providers: "Dr. Keval V. Patel, MD; Dr. Pratik Patel, MD, FACC; Dr. Chirag H. Shah, DO; Dr. Pamela Telisky, MD"},{heading: "Somerset Office — 81 Veronica Ave, Suite 203, Somerset, NJ 08873", providers: "Dr. Mahim Kapoor, MD, RPVI; Dr. Bharath Sathya, MD"},{heading: "PET Imaging Center — 234 Industrial Way W, Bldg A, Suite 103, Eatontown, NJ 07724", providers: "Diagnostic Imaging and Specialized Testing Services"}] },
+  { specialty: "Cardiology", name: "Dr. Saleem Husain, MD (HMH)", address: "805 Park Avenue, Plainfield, NJ 07060", phone: "(908)-222-8970", fax: "(908)-222-8973" },
+  { specialty: "Colon Rectal Surgery", name: "Associated Colon & Rectal Surgery", address: "3900 Park Ave, Ste 101, Edison, NJ 08820", phone: "(732)-494-6640", fax: "(732)-494-6641" },
+  { specialty: "Colon Rectal Surgery", name: "Colon Rectal Surgery Associates", address: "242 Old Bridge Turnpike, South River, NJ 08882", phone: "(732)-613-0040", fax: "(732)-613-0014" },
+  { specialty: "Colon Rectal Surgery", name: "Dr. Jonathan S. Jaffe, MD", address: "98 James St, Ste 212, Edison, NJ 08820", phone: "(732)-548-3561", fax: "(732)-548-5622" },
+  { specialty: "Dermatology", name: "Dr. Shraddha Desai, MD — Garden State Dermatology", address: "194 Route 46 East, Fairfield, NJ 07004", phone: "(973)-486-1500", fax: "(973)-486-1501" },
+  { specialty: "Dermatology", name: "Dr. Robert Sapanara, MD — Affiliated Dermatologists", address: "340 Madison Ave, Morristown, NJ 07960", phone: "(973)-267-0300", fax: "(973)-267-4222" },
+  { specialty: "Dermatology", name: "Dr. Shari Sperling, DO — Sperling Dermatology", address: "95 Hawthorne Ave, Suite 106, Florham Park, NJ 07932", phone: "(973)-576-5407", fax: "(973)-520-8003" },
+  { specialty: "Endocrinology", name: "Dr. Preethi Srinivasan, MD — Shore Endocrine Consultants", address: "40 Bey Lea Rd, Suite A102, Toms River, NJ 08753", phone: "(732)-341-8881", fax: "(732)-341-8882" },
+  { specialty: "Endocrinology", name: "Dr. Deepti Sadhwani, MD — Princeton Endocrinology Associates", address: "419 Route 1 North, Iselin, NJ 08830", phone: "(732)-636-0045", fax: "(732)-636-0048" },
+  { specialty: "Endocrinology", name: "Dr. Suketu R. Shah, MD", address: "1205 Pallone Drive, Edison, NJ 08837", phone: "(908)-222-2658", fax: "(908)-222-2659" },
+  { specialty: "ENT", name: "JFK Medical Center - Otolaryngology Providers", address: "65 James St, Edison, NJ 08820", phone: "(732)-321-7000", fax: "(732)-632-1590" },
+  { specialty: "ENT", name: "ENT and Allergy Associates", address: "34 Commerce Dr, Cranford, NJ 07016", phone: "(908)-277-1234", fax: "(908)-277-1235" },
+  { specialty: "Gastroenterology", name: "Dr. Meet Parikh, DO — Precision Digestive Health", address: "285 Durham Ave, Suite 1A, South Plainfield, NJ 07080", phone: "(908)-941-4805", fax: "(908)-325-0600" },
+  { specialty: "Gastroenterology", name: "Allied GI", address: "10 Parsonage Road, Suite 102, Edison, NJ 08837", phone: "(732)-389-5004", fax: "(732)-389-5034" },
+  { specialty: "General Surgery", name: "Dr. Stan S. Choi, MD", address: "2177 Oak Tree Rd, Ste 209, Edison, NJ 08820", phone: "(908)-769-1020", fax: "(908)-769-1021" },
+  { specialty: "General Surgery", name: "Dr. Steven Shoen, MD — Plastic & Hand Surgery", address: "222 Bridge St, Metuchen, NJ 08840", phone: "(732)-632-6090", fax: "(732)-632-6093" },
+  { specialty: "General Surgery", name: "Bariatric Center", address: "700 Rahway Avenue, Union, NJ 07083", phone: "(908)-481-1270", fax: "(908)-481-1271" },
+  { specialty: "General Surgery", name: "Dr. David Richmond, MD — Vascular Surgery", address: "1511 Park Ave, South Plainfield, NJ 07080", phone: "(908)-561-9500", fax: "(908)-561-9503" },
+  { specialty: "Hand Surgeon", name: "Dr. Alexander Michael Marcus, MD (HMH)", address: "98 James Street, Suite 212, Edison, NJ 08820", phone: "(908)-757-1520", fax: "(908)-757-1521" },
+  { specialty: "Hematology Oncology", name: "Astera Cancer Care", address: "3 Progress St, Ste 100, Edison, NJ 08820", phone: "(908)-757-9696", fax: "(908)-757-9610", locations: [{heading: "Edison Office — 3 Progress St, Ste 100, Edison, NJ 08820", providers: "Dr. Seeta Trivedi, MD; Dr. Maqsood Amjad, MD; Dr. Bruce Wallach, MD; Dr. Brian F. Canavan, DO; Dr. Richard M. Schuman, MD; Dr. Aysha Khalid, MD; Dr. Joel Alcid, MD; Dr. Jieqi Liu, MD"}] },
+  { specialty: "Hematology Oncology", name: "Dr. Maqsood Amjad, MD — Hematology Oncology Associates", address: "1314 Park Ave, Plainfield, NJ 07060", phone: "(908)-754-0400", fax: "(908)-754-0401" },
+  { specialty: "Hematology Oncology", name: "Dr. Vijaya Koduri, MD", address: "2110 Oak Tree Rd, Edison, NJ 08820", phone: "(732)-483-4501", fax: "(732)-483-4502" },
+  { specialty: "Hematology Oncology", name: "Dr. Renee Armour, MD (Breast Surgery)", address: "98 James Street, Suite 202, Edison, NJ 08820", phone: "(732)-744-5550", fax: "(732)-744-5551" },
+  { specialty: "Hematology Oncology", name: "CINJ Breast Center", address: "195 Little Albany Street, New Brunswick, NJ 08901", phone: "(732)-235-8515", fax: "(732)-235-6542" },
+  { specialty: "Hematology Oncology", name: "JFK Breast Center", address: "60 James Street, Edison, NJ 08820", phone: "(732)-744-5960", fax: "(732)-744-5961" },
+  { specialty: "Infectious Disease", name: "Dr. Raoof, MD / ID Care", address: "100 Southgate Parkway, East Brunswick, NJ 08816", phone: "(732)-390-5400", fax: "(732)-390-1311" },
+  { specialty: "Interventional Pulmonology", name: "Dr. Eugene Shostak, MD — Astera Cancer Care", address: "3 Progress St, Ste 100, Edison, NJ 08820", phone: "(908)-757-9696", fax: "(908)-757-9610" },
+  { specialty: "Nephrology", name: "Dr. James P. D'Antonio, MD — Nephrology Associates of Central Jersey", address: "100 Green St, Iselin, NJ 08830", phone: "(732)-855-9005", fax: "(732)-855-9115" },
+  { specialty: "Nephrology", name: "Dr. Shobha H. Chokski, MD", address: "1090 Oak Tree Rd, Suite A, Edison, NJ 08820", phone: "(732)-548-5250", fax: "(732)-548-5251" },
+  { specialty: "Neurology", name: "Dr. Peter C. Roblejo, MD (HMH) — Neurology Consultants of Central Jersey", address: "4 Progress St, Ste B4, Edison, NJ 08820", phone: "(732)-319-6866", fax: "(732)-319-6867" },
+  { specialty: "Obstetric & Gynecology", name: "Dr. Slawomir Magier, MD", address: "1005 Green St, Iselin, NJ 08830", phone: "(732)-283-1075", fax: "(732)-283-1076" },
+  { specialty: "Obstetric & Gynecology", name: "Dr. Sreedevi Rama, MD", address: "530 Green St, Iselin, NJ 08830", phone: "(732)-452-9099", fax: "(732)-452-9098" },
+  { specialty: "Obstetric & Gynecology", name: "Dr. Kirit Patel, MD — Group Practice", address: "34-36 Progress St, Ste A6, Edison, NJ 08820", phone: "(908)-757-9555", fax: "(908)-757-9222" },
+  { specialty: "Obstetric & Gynecology", name: "Dr. Namrata Shah, MD", address: "1802 Oak Tree Rd, Edison, NJ 08820", phone: "(732)-662-5499", fax: "(732)-662-5498" },
+  { specialty: "Obstetric & Gynecology", name: "Dr. Shwetha Shrivatsa, MD", address: "740 Route 1 North, Iselin, NJ 08830", phone: "(732)-321-0003", fax: "(732)-321-0004" },
+  { specialty: "Orthopedic Surgery", name: "Dr. David Porter, MD — Progressive Spine & Orthopaedics (Sports Medicine)", address: "3 Progress St, STE 102, Edison, NJ 08820", phone: "(201)-227-1299", fax: "(201)-227-1300" },
+  { specialty: "Pain Management", name: "Dr. Kevin S. Choe, MD — Interventional Pain Management", address: "1005 Green St, Iselin, NJ 08830", phone: "(732)-283-2224", fax: "(732)-283-2225" },
+  { specialty: "Pain Management", name: "Dr. Michelle Lavin, MD — Northeast Spine & Wellness Center", address: "1043 Route 9 North, Parlin, NJ 08859", phone: "(732)-721-3939", fax: "(732)-721-3938" },
+  { specialty: "Palliative Care", name: "Astera Cancer Care - Palliative Services", address: "3 Progress St, Ste 100, Edison, NJ 08820", phone: "(908)-757-9696", fax: "(908)-757-9610" },
+  { specialty: "Psychology / Therapy", name: "Calm and Sense Therapy (Group)", address: "551 Park Ave #7, Scotch Plains, NJ 07076", phone: "(908)-280-5742", fax: "(908)-322-9624" },
+  { specialty: "Psychology / Therapy", name: "Ms. Carrine Neves, LCSW — Calm and Sense Therapy", address: "551 Park Ave #7, Scotch Plains, NJ 07076", phone: "(908)-280-5742", fax: "(908)-322-9624" },
+  { specialty: "Pulmonology", name: "Dr. Pooja Indukuri Raju, MD (HMH) — ILD, Pulm HTN, Sleep Med", address: "HMH Edison: 80 James St, 2nd Fl, Edison, NJ 08820", phone: "(732)-321-7000", fax: "(732)-632-1590" },
+  { specialty: "Pulmonology", name: "Dr. Carlos Remolina, MD (HMH)", address: "712 North Wood Avenue, Linden, NJ 07036", phone: "(908)-241-2030", fax: "(908)-241-2031" },
+  { specialty: "Rheumatology", name: "Solara Rheumatology", address: "Multiple Regional Network Locations, NJ", phone: "(855)-765-2721", fax: "(855)-765-2722", locations: [{heading: "Regional Network — Serving Edison & Regional Offices, NJ", providers: "Dr. Birju Bhatt, MD; Dr. Mary Ann R. Curiba, MD, FACR"}] },
+  { specialty: "Surgical Oncology", name: "Dr. Benjamin Jon Golas, MD (HMH)", address: "Edison: 80 James St, Edison, NJ 08820", phone: "(732)-744-5550", fax: "(732)-744-5551" },
+  { specialty: "Urogynecology", name: "Dr. Anjali Kapur, MD (HMH)", address: "EAST BRUNSWICK: 620 Cranbury Rd, Suite 207, East Brunswick, NJ 08816 | SHREWSBURY: 655 Shrewsbury Ave, Suite 201, Shrewsbury, NJ 07702", phones: [{label: "East Brunswick Phone", number: "(848)-308-4125"},{label: "East Brunswick Fax", number: "(848)-308-4126", isFax: true},{label: "Shrewsbury Phone", number: "(732)-263-7903"},{label: "Shrewsbury Fax", number: "(732)-263-7904", isFax: true}] },
+  { specialty: "Urology", name: "Dr. Neil D. Sherman, MD (HMH)", address: "3830 Park Avenue, Edison, NJ 08820", phone: "(732)-494-9400", fax: "(732)-494-2211" },
+  { specialty: "Urology", name: "Astera Urology", address: "Multiple Regional Locations, NJ", phones: [{label: "East Brunswick Phone", number: "(732)-390-4447"},{label: "East Brunswick Fax", number: "(732)-390-4224", isFax: true},{label: "Denville / Dover / Newton / Parsippany Phone", number: "(973)-927-5788"},{label: "Denville / Dover / Newton / Parsippany Fax", number: "(973)-927-4467", isFax: true}], locations: [{heading: "East Brunswick Office — 4 Auer Court, Suites A & B, East Brunswick, NJ 08816", providers: "Dr. Edward C. White, MD, FACS"},{heading: "Denville Office — 23 Pocono Road, Suite 100, Denville, NJ 07834", providers: "Dr. Adam Berman, MD; Dr. Vincent Cubelli, MD; Dr. Lawrence Friedman, MD; Dr. Sam Moazami, MD; Dr. Gregg Zimmerman, MD"},{heading: "Dover Office — Saint Clare's Dover Hospital, 40 West Blackwell Street, Dover, NJ 07801", providers: "Dr. Adam Berman, MD"},{heading: "Newton Office — 33 Newton Sparta Road, Suite 2, Newton, NJ 07860", providers: "Dr. Adam Berman, MD; Dr. Lawrence Friedman, MD"},{heading: "Parsippany Office — 300 Littleton Road, Suite 301, Parsippany, NJ 07054", providers: "Dr. Adam Berman, MD"}] }
+];
+
+const grouped = {};
+data.forEach(p => {
+  if (!grouped[p.specialty]) grouped[p.specialty] = [];
+  grouped[p.specialty].push(p);
+});
+
+const specialties = Object.keys(grouped).sort();
+const mainContent = document.getElementById('mainContent');
+const searchInput = document.getElementById('searchInput');
+const noResults = document.getElementById('noResults');
+
+const multiselectTrigger = document.getElementById('multiselectTrigger');
+const multiselectMenu = document.getElementById('multiselectMenu');
+const chkSelectAll = document.getElementById('chkSelectAll');
+let selectedSpecialties = new Set(specialties);
+
+specialties.forEach(spec => {
+  const item = document.createElement('div');
+  item.className = 'multiselect-option';
+  
+  const chk = document.createElement('input');
+  chk.type = 'checkbox';
+  chk.value = spec;
+  chk.id = 'chk_' + spec.replace(/\s+/g, '_');
+  chk.checked = true;
+  
+  const lbl = document.createElement('label');
+  lbl.setAttribute('for', chk.id);
+  lbl.style.cursor = 'pointer';
+  lbl.style.width = '100%';
+  lbl.textContent = spec;
+  
+  item.appendChild(chk);
+  item.appendChild(lbl);
+  multiselectMenu.appendChild(item);
+  
+  chk.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      selectedSpecialties.add(spec);
+    } else {
+      selectedSpecialties.delete(spec);
+    }
+    updateMultiselectStatus();
+    applyFilters();
+  });
+});
+
+multiselectTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  multiselectMenu.classList.toggle('show');
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.multiselect-container')) {
+    multiselectMenu.classList.remove('show');
+  }
+});
+
+chkSelectAll.addEventListener('change', (e) => {
+  const checkboxes = multiselectMenu.querySelectorAll('.multiselect-option input[type="checkbox"]');
+  if (e.target.checked) {
+    selectedSpecialties = new Set(specialties);
+    checkboxes.forEach(c => c.checked = true);
+  } else {
+    selectedSpecialties.clear();
+    checkboxes.forEach(c => c.checked = false);
+  }
+  updateMultiselectStatus();
+  applyFilters();
+});
+
+function updateMultiselectStatus() {
+  if (selectedSpecialties.size === specialties.length) {
+    multiselectTrigger.textContent = "All Specialties Selected";
+    chkSelectAll.checked = true;
+    chkSelectAll.indeterminate = false;
+  } else if (selectedSpecialties.size === 0) {
+    multiselectTrigger.textContent = "No Specialties Selected";
+    chkSelectAll.checked = false;
+    chkSelectAll.indeterminate = false;
+  } else {
+    multiselectTrigger.textContent = `${selectedSpecialties.size} Specialties Selected`;
+    chkSelectAll.checked = false;
+    chkSelectAll.indeterminate = true;
+  }
+}
+
+function phoneHref(phone) {
+  return 'tel:' + phone.replace(/\D/g, '');
+}
+
+specialties.forEach(specialty => {
+  const section = document.createElement('div');
+  section.className = 'specialty-section';
+  section.dataset.specialty = specialty;
+
+  const header = document.createElement('div');
+  header.className = 'specialty-header';
+  header.addEventListener('click', () => {
+    section.classList.toggle('collapsed');
+    header.classList.toggle('collapsed');
+  });
+
+  const title = document.createElement('h2');
+  title.textContent = specialty;
+
+  const count = document.createElement('span');
+  count.className = 'specialty-count';
+  count.textContent = grouped[specialty].length + ' provider' + (grouped[specialty].length > 1 ? 's' : '');
+
+  const chevron = document.createElement('span');
+  chevron.className = 'chevron';
+  chevron.innerHTML = '▼';
+
+  header.appendChild(title);
+  header.appendChild(count);
+  header.appendChild(chevron);
+
+  const list = document.createElement('div');
+  list.className = 'providers-list';
+
+  grouped[specialty].forEach(provider => {
+    const card = document.createElement('div');
+    card.className = 'provider-card';
+    card.dataset.name = provider.name.toLowerCase();
+    card.dataset.address = provider.address.toLowerCase();
+
+    const infoContainer = document.createElement('div');
+    infoContainer.style.display = 'flex';
+    infoContainer.style.flexDirection = 'column';
+
+    const nameNode = document.createElement('div');
+    nameNode.className = 'provider-name';
+    nameNode.textContent = provider.name;
+    infoContainer.appendChild(nameNode);
+
+    const addrNode = document.createElement('div');
+    addrNode.className = 'provider-address';
+    addrNode.textContent = provider.address;
+    infoContainer.appendChild(addrNode);
+
+    if (provider.locations) {
+      provider.locations.forEach(loc => {
+        const locBlock = document.createElement('div');
+        locBlock.className = 'location-block';
+
+        const subhead = document.createElement('div');
+        subhead.className = 'location-heading';
+        subhead.textContent = loc.heading;
+
+        const provList = document.createElement('div');
+        provList.className = 'provider-address';
+        provList.style.color = 'var(--text)';
+        provList.textContent = loc.providers;
+
+        locBlock.appendChild(subhead);
+        locBlock.appendChild(provList);
+        infoContainer.appendChild(locBlock);
+        
+        card.dataset.address += " " + loc.heading.toLowerCase() + " " + loc.providers.toLowerCase();
+      });
+    }
+
+    const phonesContainer = document.createElement('div');
+    phonesContainer.className = 'provider-phone-container';
+
+    if (provider.phones) {
+      provider.phones.forEach(phObj => {
+        const pGroup = document.createElement('div');
+        pGroup.className = 'phone-group';
+
+        const lbl = document.createElement('span');
+        lbl.className = 'phone-label';
+        lbl.textContent = phObj.label;
+        pGroup.appendChild(lbl);
+
+        if (phObj.isFax) {
+          const fBox = document.createElement('span');
+          fBox.className = 'fax-badge';
+          fBox.textContent = phObj.number;
+          pGroup.appendChild(fBox);
+        } else {
+          const aLink = document.createElement('a');
+          aLink.href = phoneHref(phObj.number);
+          aLink.className = 'phone-link';
+          aLink.textContent = phObj.number;
+          pGroup.appendChild(aLink);
+        }
+        phonesContainer.appendChild(pGroup);
+      });
+    } else {
+      const phoneGroup = document.createElement('div');
+      phoneGroup.className = 'phone-group';
+      
+      const phoneLink = document.createElement('a');
+      phoneLink.href = phoneHref(provider.phone);
+      phoneLink.className = 'phone-link';
+      phoneLink.textContent = provider.phone;
+      phoneGroup.appendChild(phoneLink);
+      phonesContainer.appendChild(phoneGroup);
+
+      if (provider.fax) {
+        const faxGroup = document.createElement('div');
+        faxGroup.className = 'phone-group';
+        
+        const faxBox = document.createElement('span');
+        faxBox.className = 'fax-badge';
+        faxBox.textContent = provider.fax;
+        faxGroup.appendChild(faxBox);
+        phonesContainer.appendChild(faxGroup);
+      }
+    }
+
+    card.appendChild(infoContainer);
+    card.appendChild(phonesContainer);
+    list.appendChild(card);
+  });
+
+  section.appendChild(header);
+  section.appendChild(list);
+  mainContent.appendChild(section);
+});
+
+function applyFilters() {
+  const query = searchInput.value.toLowerCase().trim();
+  let anyVisible = false;
+
+  document.querySelectorAll('.specialty-section').forEach(section => {
+    const specialty = section.dataset.specialty;
+    const specialtySelected = selectedSpecialties.has(specialty);
+
+    if (!specialtySelected) {
+      section.style.display = 'none';
+      return;
+    }
+
+    let sectionHasVisible = false;
+    section.querySelectorAll('.provider-card').forEach(card => {
+      const nameMatch = card.dataset.name.includes(query);
+      const addrMatch = card.dataset.address.includes(query);
+      if (nameMatch || addrMatch || !query) {
+        card.classList.remove('hidden');
+        sectionHasVisible = true;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    section.style.display = sectionHasVisible ? '' : 'none';
+    if (sectionHasVisible) {
+      anyVisible = true;
+      if (query) {
+        section.classList.remove('collapsed');
+        section.querySelector('.specialty-header').classList.remove('collapsed');
+      }
+    }
+  });
+
+  noResults.classList.toggle('visible', !anyVisible);
+}
+
+searchInput.addEventListener('input', applyFilters);
+</script>
+
+</body>
+</html>
