@@ -29,11 +29,16 @@
   .controls { max-width: 860px; margin: 28px auto 0; padding: 0 20px; display: flex; gap: 12px; flex-wrap: wrap; }
   .search-wrap { flex: 1; position: relative; min-width: 200px; }
   .search-wrap input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
-  .multiselect-select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; }
-  .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1.5px solid var(--border); border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 10; }
+  .multiselect-container { position: relative; min-width: 200px; }
+  .multiselect-select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 0.9rem; }
+  .multiselect-select:hover { background: var(--accent-light); }
+  .multiselect-options { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1.5px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   .multiselect-options.show { display: block; }
-  .multiselect-option { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; }
+  .multiselect-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--accent-light); }
+  .multiselect-option:last-child { border-bottom: none; }
   .multiselect-option:hover { background: var(--accent-light); }
+  .multiselect-option input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
+  .multiselect-option label { cursor: pointer; flex: 1; margin: 0; }
   .main { max-width: 860px; margin: 24px auto 0; padding: 0 20px; }
   .specialty-section { margin-bottom: 28px; }
   .specialty-header { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #1e2d5a 0%, #2e4fa0 30%, #e8521a 100%); color: white; padding: 12px 18px; border-radius: 10px 10px 0 0; cursor: pointer; }
@@ -51,7 +56,7 @@
   .phone-link:hover { background: #1e2d5a; color: white; }
   .location-block { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 0.83rem; }
   .location-heading { font-weight: 600; color: var(--accent); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 2px; }
-  .no-results { padding: 40px 20px; display: none; }
+  .no-results { padding: 40px 20px; display: none; text-align: center; color: var(--muted); }
   .no-results.show { display: block; }
 </style>
 </head>
@@ -71,7 +76,7 @@
     <input type="text" id="searchInput" placeholder="Search provider name or address...">
   </div>
   <div class="multiselect-container">
-    <div class="multiselect-select" id="multiselectTrigger">All Specialties</div>
+    <div class="multiselect-select" id="multiselectTrigger">All Specialties ▼</div>
     <div class="multiselect-options" id="multiselectMenu"></div>
   </div>
 </div>
@@ -142,6 +147,7 @@ const search = document.getElementById('searchInput');
 const noRes = document.getElementById('noResults');
 const trigger = document.getElementById('multiselectTrigger');
 const menu = document.getElementById('multiselectMenu');
+const container = document.querySelector('.multiselect-container');
 
 let selected = new Set(specialties);
 
@@ -257,7 +263,47 @@ function filter() {
   noRes.classList[hasVisible ? 'remove' : 'add']('show');
 }
 
-menu.innerHTML = '<div class="multiselect-option"><input type="checkbox" id="all" checked><label for="all">All</label></div>';
+function updateSelectDisplay() {
+  if (selected.size === specialties.length) {
+    trigger.textContent = 'All Specialties ▼';
+  } else if (selected.size === 0) {
+    trigger.textContent = 'No Specialties ▼';
+  } else {
+    trigger.textContent = selected.size + ' Selected ▼';
+  }
+}
+
+// Build menu
+const allCheckDiv = document.createElement('div');
+allCheckDiv.className = 'multiselect-option';
+const allChk = document.createElement('input');
+allChk.type = 'checkbox';
+allChk.id = 'chk_all';
+allChk.checked = true;
+const allLbl = document.createElement('label');
+allLbl.htmlFor = 'chk_all';
+allLbl.textContent = 'Select All';
+allCheckDiv.appendChild(allChk);
+allCheckDiv.appendChild(allLbl);
+
+allChk.onchange = () => {
+  if (allChk.checked) {
+    selected = new Set(specialties);
+    document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
+      chk.checked = true;
+    });
+  } else {
+    selected.clear();
+    document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
+      chk.checked = false;
+    });
+  }
+  updateSelectDisplay();
+  filter();
+};
+
+menu.appendChild(allCheckDiv);
+
 specialties.forEach(s => {
   const opt = document.createElement('div');
   opt.className = 'multiselect-option';
@@ -274,16 +320,30 @@ specialties.forEach(s => {
   chk.onchange = () => {
     if (chk.checked) selected.add(s);
     else selected.delete(s);
+    
+    if (selected.size === specialties.length) {
+      allChk.checked = true;
+    } else {
+      allChk.checked = false;
+    }
+    
+    updateSelectDisplay();
     filter();
   };
   
   menu.appendChild(opt);
 });
 
-trigger.onclick = () => menu.classList.toggle('show');
-document.onclick = (e) => {
-  if (!e.target.closest('.multiselect-container')) menu.classList.remove('show');
+trigger.onclick = (e) => {
+  e.stopPropagation();
+  menu.classList.toggle('show');
 };
+
+document.addEventListener('click', (e) => {
+  if (!container.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
 
 search.oninput = filter;
 
@@ -293,6 +353,3 @@ if (document.readyState === 'loading') {
 } else {
   render();
 }
-</script>
-</body>
-</html>
