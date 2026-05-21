@@ -30,7 +30,7 @@
   .search-wrap { flex: 1; position: relative; min-width: 200px; }
   .search-wrap input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
   .multiselect-select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; }
-  .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1.5px solid var(--border); border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 1000; }
+  .multiselect-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1.5px solid var(--border); border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 10; }
   .multiselect-options.show { display: block; }
   .multiselect-option { display: flex; align-items: center; gap: 10px; padding: 8px 14px; cursor: pointer; }
   .multiselect-option:hover { background: var(--accent-light); }
@@ -47,7 +47,7 @@
   .provider-card.hidden { display: none; }
   .provider-name { font-weight: 600; font-size: 0.92rem; }
   .provider-address { font-size: 0.83rem; color: var(--muted); line-height: 1.4; margin-top: 4px; }
-  .phone-link { display: inline-block; background: var(--pill-bg); color: var(--pill-text); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 6px; margin-top: 4px; }
+  .phone-link { display: inline-block; background: var(--pill-bg); color: var(--pill-text); text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 6px; margin-top: 8px; }
   .phone-link:hover { background: #1e2d5a; color: white; }
   .location-block { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 0.83rem; }
   .location-heading { font-weight: 600; color: var(--accent); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 2px; }
@@ -84,7 +84,7 @@
 const providerData = [
   {specialty: "Cardiology", name: "Dr. Varinder M. Singh, MD (HMH)", address: "Central Jersey Cardiology, PC — 215 Bridge St, Bldg E, Metuchen, NJ 08840", phone: "(732)-452-0400"},
   {specialty: "Cardiology", name: "Dr. Saleem Husain, MD (HMH)", address: "805 Park Avenue, Plainfield, NJ 07060", phone: "(908)-222-8970"},
-  {specialty: "Cardiology", name: "Monmouth Cardiology Associates", address: "Multiple Regional Locations, NJ", phone: "(732)-210-3285", locations: [{heading: "Eatontown Office", address: "11 Meridian Rd, Eatontown, NJ 07724"},{heading: "Freehold Office", address: "222 Schanck Rd, Freehold, NJ 07728"},{heading: "Monroe Office", address: "298 Applegarth Rd, Monroe, NJ 08831"},{heading: "Somerset Office", address: "81 Veronica Ave, Somerset, NJ 08873"}]},
+  {specialty: "Cardiology", name: "Monmouth Cardiology Associates", address: "Multiple Regional Locations, NJ", phone: "(732)-210-3285", locations: [{heading: "Eatontown Office", address: "11 Meridian Road, Eatontown, NJ 07724"}, {heading: "Long Branch Office", address: "140 Morris Avenue, Long Branch, NJ 07740"}]},
   {specialty: "Colon Rectal Surgery", name: "Associated Colon & Rectal Surgery", address: "3900 Park Ave, Ste 101, Edison, NJ 08820", phone: "(732)-494-6640"},
   {specialty: "Colon Rectal Surgery", name: "Colon Rectal Surgery Associates", address: "242 Old Bridge Turnpike, South River, NJ 08882", phone: "(732)-613-0040"},
   {specialty: "Colon Rectal Surgery", name: "Dr. Jonathan S. Jaffe, MD", address: "98 James St, Ste 212, Edison, NJ 08820", phone: "(732)-548-3561"},
@@ -127,7 +127,7 @@ const providerData = [
   {specialty: "Rheumatology", name: "Solara Rheumatology", address: "Multiple Regional Locations, NJ", phone: "(855)-765-2721"},
   {specialty: "Surgical Oncology", name: "Dr. Benjamin Jon Golas, MD (HMH)", address: "80 James St, Edison, NJ 08820", phone: "(732)-744-5550"},
   {specialty: "Urology", name: "Dr. Neil D. Sherman, MD (HMH)", address: "3830 Park Avenue, Edison, NJ 08820", phone: "(732)-494-9400"},
-  {specialty: "Urology", name: "Astera Urology", address: "Multiple Regional Locations, NJ", phone: "(732)-390-4447", locations: [{heading: "East Brunswick", address: "4 Auer Court, East Brunswick, NJ 08816"},{heading: "Denville", address: "23 Pocono Road, Denville, NJ 07834"},{heading: "Dover", address: "Saint Clare's Dover Hospital, Dover, NJ 07801"}]}
+  {specialty: "Urology", name: "Astera Urology", address: "Multiple Regional Locations, NJ", phone: "(732)-390-4447", locations: [{heading: "East Brunswick", address: "4 Auer Court, East Brunswick, NJ 08816"}, {heading: "Rahway", address: "1 Rahway Plaza, Rahway, NJ 07065"}]}
 ];
 
 const grouped = {};
@@ -287,7 +287,12 @@ document.onclick = (e) => {
 
 search.oninput = filter;
 
-render();
+// Ensure DOM is fully loaded before rendering
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', render);
+} else {
+  render();
+}
 </script>
 </body>
 </html>
