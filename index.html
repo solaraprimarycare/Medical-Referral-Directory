@@ -16,8 +16,6 @@
     --border: #e0dce8;
     --pill-bg: #eef0f7;
     --pill-text: #1e2d5a;
-    --fax-bg: #f5edf0;
-    --fax-text: #7d2d47;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 60px; }
@@ -30,18 +28,18 @@
   .search-wrap { flex: 1; position: relative; min-width: 200px; }
   .search-wrap input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
   .multiselect-container { position: relative; min-width: 200px; }
-  .multiselect-select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 0.9rem; }
+  .multiselect-select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 0.9rem; user-select: none; }
   .multiselect-select:hover { background: var(--accent-light); }
   .multiselect-options { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 1.5px solid var(--border); border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   .multiselect-options.show { display: block; }
-  .multiselect-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--accent-light); }
+  .multiselect-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
   .multiselect-option:last-child { border-bottom: none; }
   .multiselect-option:hover { background: var(--accent-light); }
   .multiselect-option input[type="checkbox"] { cursor: pointer; width: 16px; height: 16px; }
   .multiselect-option label { cursor: pointer; flex: 1; margin: 0; }
   .main { max-width: 860px; margin: 24px auto 0; padding: 0 20px; }
   .specialty-section { margin-bottom: 28px; }
-  .specialty-header { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #1e2d5a 0%, #2e4fa0 30%, #e8521a 100%); color: white; padding: 12px 18px; border-radius: 10px 10px 0 0; cursor: pointer; }
+  .specialty-header { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #1e2d5a 0%, #2e4fa0 30%, #e8521a 100%); color: white; padding: 12px 18px; border-radius: 10px 10px 0 0; cursor: pointer; user-select: none; }
   .specialty-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.05rem; flex: 1; }
   .specialty-count { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 2px 10px; font-size: 0.78rem; }
   .specialty-section.collapsed .providers-list { display: none; }
@@ -142,16 +140,13 @@ providerData.forEach(p => {
 });
 
 const specialties = Object.keys(grouped).sort();
-const main = document.getElementById('mainContent');
-const search = document.getElementById('searchInput');
-const noRes = document.getElementById('noResults');
-const trigger = document.getElementById('multiselectTrigger');
-const menu = document.getElementById('multiselectMenu');
-const container = document.querySelector('.multiselect-container');
-
 let selected = new Set(specialties);
 
 function render() {
+  const main = document.getElementById('mainContent');
+  const search = document.getElementById('searchInput');
+  const noRes = document.getElementById('noResults');
+  
   main.innerHTML = '';
   
   specialties.forEach(spec => {
@@ -238,6 +233,10 @@ function render() {
 }
 
 function filter() {
+  const main = document.getElementById('mainContent');
+  const search = document.getElementById('searchInput');
+  const noRes = document.getElementById('noResults');
+  
   const q = search.value.toLowerCase().trim();
   let hasVisible = false;
   
@@ -264,6 +263,7 @@ function filter() {
 }
 
 function updateSelectDisplay() {
+  const trigger = document.getElementById('multiselectTrigger');
   if (selected.size === specialties.length) {
     trigger.textContent = 'All Specialties ▼';
   } else if (selected.size === 0) {
@@ -273,83 +273,99 @@ function updateSelectDisplay() {
   }
 }
 
-// Build menu
-const allCheckDiv = document.createElement('div');
-allCheckDiv.className = 'multiselect-option';
-const allChk = document.createElement('input');
-allChk.type = 'checkbox';
-allChk.id = 'chk_all';
-allChk.checked = true;
-const allLbl = document.createElement('label');
-allLbl.htmlFor = 'chk_all';
-allLbl.textContent = 'Select All';
-allCheckDiv.appendChild(allChk);
-allCheckDiv.appendChild(allLbl);
-
-allChk.onchange = () => {
-  if (allChk.checked) {
-    selected = new Set(specialties);
-    document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
-      chk.checked = true;
-    });
-  } else {
-    selected.clear();
-    document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
-      chk.checked = false;
-    });
-  }
-  updateSelectDisplay();
-  filter();
-};
-
-menu.appendChild(allCheckDiv);
-
-specialties.forEach(s => {
-  const opt = document.createElement('div');
-  opt.className = 'multiselect-option';
-  const chk = document.createElement('input');
-  chk.type = 'checkbox';
-  chk.id = 'chk_' + s;
-  chk.checked = true;
-  const lbl = document.createElement('label');
-  lbl.htmlFor = 'chk_' + s;
-  lbl.textContent = s;
-  opt.appendChild(chk);
-  opt.appendChild(lbl);
+function setupMenu() {
+  const menu = document.getElementById('multiselectMenu');
+  const trigger = document.getElementById('multiselectTrigger');
+  const container = document.querySelector('.multiselect-container');
+  const search = document.getElementById('searchInput');
   
-  chk.onchange = () => {
-    if (chk.checked) selected.add(s);
-    else selected.delete(s);
-    
-    if (selected.size === specialties.length) {
-      allChk.checked = true;
+  // Select All option
+  const allCheckDiv = document.createElement('div');
+  allCheckDiv.className = 'multiselect-option';
+  const allChk = document.createElement('input');
+  allChk.type = 'checkbox';
+  allChk.id = 'chk_all';
+  allChk.checked = true;
+  const allLbl = document.createElement('label');
+  allLbl.htmlFor = 'chk_all';
+  allLbl.textContent = 'Select All';
+  allCheckDiv.appendChild(allChk);
+  allCheckDiv.appendChild(allLbl);
+  
+  allChk.onchange = () => {
+    if (allChk.checked) {
+      selected = new Set(specialties);
+      document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
+        chk.checked = true;
+      });
     } else {
-      allChk.checked = false;
+      selected.clear();
+      document.querySelectorAll('.multiselect-options input[type="checkbox"]').forEach(chk => {
+        chk.checked = false;
+      });
     }
-    
     updateSelectDisplay();
     filter();
   };
   
-  menu.appendChild(opt);
-});
+  menu.appendChild(allCheckDiv);
+  
+  // Individual specialties
+  specialties.forEach(s => {
+    const opt = document.createElement('div');
+    opt.className = 'multiselect-option';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.id = 'chk_' + s.replace(/\s+/g, '_');
+    chk.checked = true;
+    const lbl = document.createElement('label');
+    lbl.htmlFor = chk.id;
+    lbl.textContent = s;
+    opt.appendChild(chk);
+    opt.appendChild(lbl);
+    
+    chk.onchange = () => {
+      if (chk.checked) {
+        selected.add(s);
+      } else {
+        selected.delete(s);
+      }
+      
+      allChk.checked = (selected.size === specialties.length);
+      updateSelectDisplay();
+      filter();
+    };
+    
+    menu.appendChild(opt);
+  });
+  
+  // Toggle dropdown
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('show');
+  };
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) {
+      menu.classList.remove('show');
+    }
+  });
+  
+  // Search functionality
+  search.oninput = filter;
+}
 
-trigger.onclick = (e) => {
-  e.stopPropagation();
-  menu.classList.toggle('show');
-};
-
-document.addEventListener('click', (e) => {
-  if (!container.contains(e.target)) {
-    menu.classList.remove('show');
-  }
-});
-
-search.oninput = filter;
-
-// Ensure DOM is fully loaded before rendering
+// Initialize when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', render);
+  document.addEventListener('DOMContentLoaded', () => {
+    render();
+    setupMenu();
+  });
 } else {
   render();
+  setupMenu();
 }
+</script>
+</body>
+</html>
